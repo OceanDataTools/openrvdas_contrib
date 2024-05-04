@@ -77,8 +77,7 @@ def index(request):
         # Are they deleting a cruise?(!)
         if 'delete_cruise' in request.POST:
             logging.info('deleting cruise')
-            
-            api.delete_configuration()
+            api.delete_cruise()
 
         # Did we get a mode selection?
         elif 'select_mode' in request.POST:
