@@ -30,4 +30,3 @@ djangorestframework
 
 #includes the swagger ui css and javascript
 drf-spectacular[sidecar]
-
