@@ -22,6 +22,7 @@ class NetCDFWriter(Writer):
     is a <regex>:<filebase> dict, write records to every filebase whose
     regex appears in the record.
     """
+    # Based on the LogfileWriter
     def __init__(self, filebase=None, flush=True,
                  time_format=timestamp.TIME_FORMAT,
                  date_format=timestamp.DATE_FORMAT,
