@@ -5,3 +5,5 @@ django-ipware
 requests
 #MQTT onshore connection
 paho-mqtt
+#netcdf output
+netCDF4
