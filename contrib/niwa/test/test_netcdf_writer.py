@@ -169,10 +169,6 @@ class TestNetCDFWriter(unittest.TestCase):
             writer = NetCDFWriter(filebase, rollover_format='%Y-%m')
             writer.write(SAMPLE_DATA_DICT_MONTHLY)
 
-            from os import listdir
-            from os.path import isfile, join
-            onlyfiles = [f for f in listdir(tmpdirname) if isfile(join(tmpdirname, f))]
-
             record_count = 0
             for record in SAMPLE_DATA_DICT_MONTHLY:
 
@@ -197,10 +193,6 @@ class TestNetCDFWriter(unittest.TestCase):
 
             writer = NetCDFWriter(filebase, rollover_format='%Y-%m-%d_%H00')
             writer.write(SAMPLE_DATA_DICT_HOURLY)
-
-            from os import listdir
-            from os.path import isfile, join
-            onlyfiles = [f for f in listdir(tmpdirname) if isfile(join(tmpdirname, f))]
 
             record_count = 0
             for record in SAMPLE_DATA_DICT_HOURLY:
