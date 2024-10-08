@@ -7,6 +7,8 @@ import unittest
 
 from netCDF4 import Dataset
 
+from logger.utils import timestamp
+
 sys.path.append('.')
 from logger.utils.das_record import DASRecord  # noqa: E402
 from contrib.niwa.logger.writers.netcdf_writer import NetCDFWriter  # noqa: E402
@@ -29,6 +31,20 @@ SAMPLE_DATA_DASRECORD_STR = """{"data_id": "test", "message_type": null, "timest
 {"data_id": "test", "message_type": null, "timestamp": 1691410660.0, "fields": {"F1": 6.26, "F2": 121734.82}, "metadata": {}}
 {"data_id": "test", "message_type": null, "timestamp": 1691410661.0, "fields": {"F1": 7.26, "F2": 121733.82}, "metadata": {}}
 """
+
+SAMPLE_DATA_DICT_MONTHLY = [
+    {'timestamp': 1691410658.0, 'fields': {'F1': 4.26, 'F2': 131736.82}},
+    {'timestamp': 1694413659.0, 'fields': {'F1': 5.26, 'F2': 131735.82}},
+    {'timestamp': 1696417660.0, 'fields': {'F1': 6.26, 'F2': 131734.82}},
+    {'timestamp': 1699420661.0, 'fields': {'F1': 7.26, 'F2': 131733.82}},
+]
+
+SAMPLE_DATA_DICT_HOURLY = [
+    {'timestamp': 1691410658.0, 'fields': {'F1': 4.26, 'F2': 141736.82}},
+    {'timestamp': 1691413659.0, 'fields': {'F1': 5.26, 'F2': 141735.82}},
+    {'timestamp': 1691417660.0, 'fields': {'F1': 6.26, 'F2': 141734.82}},
+    {'timestamp': 1691420661.0, 'fields': {'F1': 7.26, 'F2': 141733.82}},
+]
 
 
 class TestNetCDFWriter(unittest.TestCase):
@@ -143,6 +159,64 @@ class TestNetCDFWriter(unittest.TestCase):
                         self.assertEqual(record["fields"]["F2"], outfile.variables.get("F2")[record_count])
 
                         record_count+=1
+
+
+    def test_rollover_format_monthly(self):
+         with tempfile.TemporaryDirectory() as tmpdirname:
+
+            filebase = tmpdirname + '/logfile'
+
+            writer = NetCDFWriter(filebase, rollover_format='%Y-%m')
+            writer.write(SAMPLE_DATA_DICT_MONTHLY)
+
+            from os import listdir
+            from os.path import isfile, join
+            onlyfiles = [f for f in listdir(tmpdirname) if isfile(join(tmpdirname, f))]
+
+            record_count = 0
+            for record in SAMPLE_DATA_DICT_MONTHLY:
+
+                with self.open_netcdf_file(filebase + f'-2023-{str(8 +record_count).zfill(2)}.nc') as outfile:
+                    expected_dimensions = ["time", "F1", "F2",]
+                    expected_variables = ["time", "F1", "F2",]
+
+                    self.assertEqual(list(outfile.dimensions.keys()), expected_dimensions)
+                    self.assertEqual(list(outfile.variables.keys()), expected_variables)
+
+                    self.assertEqual(record["timestamp"], outfile.variables.get("time")[0])
+                    self.assertEqual(record["fields"]["F1"], outfile.variables.get("F1")[0])
+                    self.assertEqual(record["fields"]["F2"], outfile.variables.get("F2")[0])
+
+                record_count+=1
+
+
+    def test_rollover_format_hourly(self):
+         with tempfile.TemporaryDirectory() as tmpdirname:
+
+            filebase = tmpdirname + '/logfile'
+
+            writer = NetCDFWriter(filebase, rollover_format='%Y-%m-%d_%H00')
+            writer.write(SAMPLE_DATA_DICT_HOURLY)
+
+            from os import listdir
+            from os.path import isfile, join
+            onlyfiles = [f for f in listdir(tmpdirname) if isfile(join(tmpdirname, f))]
+
+            record_count = 0
+            for record in SAMPLE_DATA_DICT_HOURLY:
+
+                with self.open_netcdf_file(filebase + f'-2023-08-07_1{2 +record_count}00.nc') as outfile:
+                    expected_dimensions = ["time", "F1", "F2",]
+                    expected_variables = ["time", "F1", "F2",]
+
+                    self.assertEqual(list(outfile.dimensions.keys()), expected_dimensions)
+                    self.assertEqual(list(outfile.variables.keys()), expected_variables)
+
+                    self.assertEqual(record["timestamp"], outfile.variables.get("time")[0])
+                    self.assertEqual(record["fields"]["F1"], outfile.variables.get("F1")[0])
+                    self.assertEqual(record["fields"]["F2"], outfile.variables.get("F2")[0])
+
+                record_count+=1
 
 
 if __name__ == '__main__':

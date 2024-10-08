@@ -6,8 +6,11 @@ import numbers
 import re
 import sys
 
-# requires pip install netCDF4
-from netCDF4 import Dataset
+try:
+    # requires pip install netCDF4
+    from netCDF4 import Dataset
+except ImportError:
+    logging.error('NetCDFWriter requires installation of the netCDF4 package. Please run "pip install netCDF4" and retry.')
 
 from os.path import dirname, realpath
 sys.path.append(dirname(dirname(dirname(realpath(__file__)))))
@@ -25,15 +28,15 @@ class NetCDFWriter(Writer):
     # Based on the LogfileWriter
     def __init__(self, filebase=None, flush=True,
                  time_format=timestamp.TIME_FORMAT,
-                 date_format=timestamp.DATE_FORMAT,
+                 rollover_format=timestamp.DATE_FORMAT,
                  split_char=' ', suffix='', header=None,
-                 header_file=None, rollover_hourly=False,
+                 header_file=None,
                  quiet=False):
         """Write timestamped records to a filebase. The filebase will
         have the current date appended, in keeping with R2R format
         recommendations (http://www.rvdata.us/operators/directory). When the
-        timestamped date on records rolls over to next day, create a new file
-        with the new date suffix.
+        timestamped date on records differs from the rollover_format, create a new file
+        with the new suffix.
 
         If filebase is a dict of <string>:<filebase> pairs, The writer will
         attempt to match a <string> in the dict to each record it receives.
@@ -54,7 +57,12 @@ class NetCDFWriter(Writer):
 
         flush           If True (default), flush after every write() call
 
-        date_fomat      A strftime-compatible string, such as '%Y-%m-%d';
+        time_format     A strftime-compatible string, such as '%Y-%m-%dT%H:%M:%S.%fZ'
+                        used to parse string records;
+                        defaults to whatever's defined in
+                        utils.timestamps.TIME_FORMAT.
+
+        rollover_format A strftime-compatible string, such as '%Y-%m-%d';
                         defaults to whatever's defined in
                         utils.timestamps.DATE_FORMAT.
 
@@ -66,9 +74,6 @@ class NetCDFWriter(Writer):
 
         header_file     Add the content of the specified file to each file.
 
-        rollover_hourly Set files to truncate by hour.  By default files will
-                        truncate by day
-
         quiet           If True, don't complain if a record doesn't match
                         any mapped prefix
         ```
@@ -76,12 +81,11 @@ class NetCDFWriter(Writer):
         self.filebase = filebase
         self.flush = flush
         self.time_format = time_format
-        self.date_format = date_format
+        self.rollover_format = rollover_format
         self.split_char = split_char
         self.suffix = suffix
         self.header = header
         self.header_file = header_file
-        self.rollover_hourly = rollover_hourly
         self.quiet = quiet
 
         # If our filebase is a dict, we're going to be doing our
@@ -136,11 +140,9 @@ class NetCDFWriter(Writer):
                               f'dict, or timestamp-prefixed string. Received: "{record}"')
             return
 
-        # Now parse ts into hour and date strings
-        hr_str = self.rollover_hourly and \
-            timestamp.date_str(ts, date_format='_%H00') or ""
-        date_str = timestamp.date_str(ts, date_format=self.date_format)
-        time_str = date_str + hr_str + self.suffix
+        # Now parse ts into date strings
+        date_str = timestamp.date_str(ts, date_format=self.rollover_format)
+        time_str = date_str + self.suffix
         logging.debug('NetCDFWriter time_str: %s', time_str)
 
         # Figure out where we're going to write
