@@ -1,0 +1,27 @@
+# Parse stdin sensor records and write timestamped density to stdout.
+readers:
+  - class: TextFileReader
+transforms:
+  - class: ParseTransform
+    kwargs:
+      definition_path: contrib/inkfish/seawater_density/examples/svp_devices.yaml
+      record_format: '{data_id:w} {timestamp:ti},{field_string}'
+  - class: WaterDensityTransform
+    module: contrib.inkfish.seawater_density.logger.transforms.water_density_transform
+    kwargs:
+      sound_speed_field: SVP_SoundSpeed
+      temp_field: SVP_WaterTemp
+      density_name: SVP_WaterDensity
+      data_id: water_density
+      update_on_fields:
+        - SVP_SoundSpeed
+      max_field_age:
+        SVP_SoundSpeed: 5
+        SVP_WaterTemp: 5
+      metadata_interval: 10
+  - class: FormatTransform
+    kwargs:
+      format_str: '{timestamp},{SVP_WaterDensity:.3f}'
+      use_iso_timestamp: true
+writers:
+  - class: TextFileWriter

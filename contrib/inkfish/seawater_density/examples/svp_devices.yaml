@@ -1,0 +1,11 @@
+# Optional mapping for the AML sound-speed/temperature example.
+includes:
+  - contrib/inkfish/seawater_density/examples/SVP.yaml
+
+devices:
+  svp:
+    category: device
+    device_type: SVP
+    fields:
+      SoundSpeed: SVP_SoundSpeed
+      WaterTemp: SVP_WaterTemp

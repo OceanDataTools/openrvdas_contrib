@@ -1,0 +1,15 @@
+# Parse AML-1 RT SVS records: <sound_speed>,<water_temp>.
+SVP:
+  category: "device_type"
+  description: "AML-1 RT SVS (sound velocity + temperature)"
+
+  format:
+    SVP: "{SoundSpeed:f},{WaterTemp:f}"
+
+  fields:
+    SoundSpeed:
+      units: "meters/second"
+      description: "Speed of sound in water"
+    WaterTemp:
+      units: "deg C"
+      description: "In-situ water temperature"

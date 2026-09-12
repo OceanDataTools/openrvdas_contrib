@@ -1,0 +1,3 @@
+# Optional offline TEOS-10 validation dependencies; no runtime additions.
+gsw>=3.6
+numpy>=1.23
